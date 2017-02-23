@@ -2,10 +2,8 @@
 
 /* Generic styling. */
 .reveal {
-  & {
-    font-family: Lato, sans-serif;
-    font-size: 5vh;
-  }
+  font-family: Lato, sans-serif;
+  font-size: 5vh;
 
   h1, h2, h3, h4, h5, h6 {
     font-family: Lato, sans-serif;
@@ -64,20 +62,12 @@
     opacity: 0.5;
   }
 
-  .octicon {
-    font-family: octicons !important;
-    font-size: 1em !important;
-    font-weight: normal !important;
-  }
-
   .todo {
-    & {
-      color: red !important;
-      font-weight: bold !important;
-      font-family: "Comic Sans MS", inherit !important;
-      font-size: 10vw !important;
-      text-decoration: blink !important;
-    }
+    color: red !important;
+    font-weight: bold !important;
+    font-family: "Comic Sans MS", inherit !important;
+    font-size: 10vw !important;
+    text-decoration: blink !important;
 
     &:before {
       content: "TODO: ";
@@ -109,68 +99,6 @@
   }
 
   /* Slide specific styles. */
-  #title {
-    h1 {
-      font-size: 12vh;
-    }
-
-    h3 {
-      font-size: 7vh;
-    }
-  }
-
-  .logos img {
-    vertical-align: middle;
-    height: 20vh;
-    padding: 0 2vw;
-  }
-
-  #old-school img:nth-child(3),
-  #old-school img:nth-child(4) {
-    filter: saturate(0) opacity(0.5);
-  }
-
-  #new-school img:nth-child(1),
-  #new-school img:nth-child(2) {
-    filter: saturate(0) opacity(0.5);
-  }
-
-  #tableau {
-    img {
-      height: 10vh;
-    }
-
-    td, th {
-      text-align: center;
-    }
-
-    td {
-      &:first-child {
-        text-align: left;
-      }
-
-      .yes:before {
-        content: "✔︎";
-        color: green;
-      }
-
-      .no:before {
-        content: "✖︎";
-        color: red;
-      }
-
-      .maybe:before {
-        content: "?";
-        color: blue;
-        font-weight: bold;
-        filter: saturate(0.8);
-      }
-
-      .weak:before {
-        filter: opacity(0.5);
-      }
-    }
-  }
 }
 
 /* vim: set nocin ai et ts=2 sw=2: */

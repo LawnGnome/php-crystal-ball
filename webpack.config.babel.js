@@ -6,7 +6,7 @@ export default {
   entry: "./index.js",
   output: {
     path: resolve(__dirname, "dist"),
-    publicPath: "/pages/aharvey/php-crystal-ball/",
+    publicPath: "/php-crystal-ball/",
     filename: "pres.js",
   },
   devtool: "inline-source-map",

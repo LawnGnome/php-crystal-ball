@@ -15,21 +15,579 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section id="title">
-					<h1>PHP through a crystal ball</h1>
-					<h3>Adam Harvey</h3>
-					<aside class="notes">
-					</aside>
+				<section>
+					<section>
+						<div class="stage">
+							<figure class="php"></figure>
+							<figure class="ball bubble"></figure>
+						</div>
+						<h3>Adam Harvey</h3>
+						<p>New Relic</p>
+						<h3><a href="https://twitter.com/lgnome">@LGnome</a></h3>
+						<aside class="notes">
+							Hi, I'm Adam. Intro. Normally I do talks about what has already
+							shipped in PHP, but this time around I'm going to gaze into my
+							crystal ball and see what is and might be coming down the pipe.
+							We're going to look at what's coming in increasing order of
+							fuzziness: I'm going to start with what's already in PHP 7.2
+							(coming in December, hopefully!), and then what's being talked
+							about both for 7.2 and beyond.
+						</aside>
+					</section>
 				</section>
 
-				<section id="thanks">
+				<section>
+					<section>
+						<h2>What's in PHP 7.2</h2>
+						<aside class="notes">
+							So, as I said, let's start with what's already merged to PHP 7.2.
+							This isn't an exhaustive list of what's coming in PHP 7.2, but
+							it's my attempt to cover the interesting things that have landed
+							so far. Right now a lot of this is more deprecations and cleanups
+							than new features: the features tend to come just before feature
+							freeze as people panic.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$arr = [1, 2, 3];
+$obj = (object) $arr;
+var_dump($obj);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+object(stdClass)#1 (3) {
+  [0]=&gt;
+  int(1)
+  [1]=&gt;
+  int(2)
+  [2]=&gt;
+  int(3)
+}
+						</code></pre>
+						<aside class="notes">
+							PHP has had a bug since at least PHP 4 (probably 3) where array to
+							object conversion is interesting. Take this example: you end up
+							with an object that has numeric keys. How do we get to property 0?
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$arr = [1, 2, 3];
+$obj = (object) $arr;
+var_dump($obj->0);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+Parse error: syntax error, unexpected '0' (T_LNUMBER),
+expecting identifier (T_STRING) or variable (T_VARIABLE) or
+'{' or '$' in - on line 5
+						</code></pre>
+						<aside class="notes">
+							The naive approach fails, obviously.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$arr = [1, 2, 3];
+$obj = (object) $arr;
+var_dump($obj->{0});
+var_dump($obj->{'0'});
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+NULL
+NULL
+						</code></pre>
+						<aside class="notes">
+							At this point, the more knowledgeable PHP developer pulls out the
+							big guns: PHP's indirect property access syntax. Except, in PHP
+							7.1...
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$arr = [1, 2, 3];
+$obj = (object) $arr;
+var_dump($obj->{0});
+var_dump($obj->{'0'});
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+1
+1
+						</code></pre>
+						<aside class="notes">
+							In PHP 7.2, though: life is good. You can access it either way,
+							and PHP is smart enough to handle either an integer or a string as
+							the property name.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$obj = new stdClass;
+$obj->{'0'} = 'foo';
+$arr = (array) $obj;
+var_dump($arr);
+var_dump($arr[0]);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+array(1) {
+  ["0"]=>
+  string(3) "foo"
+}
+NULL
+						</code></pre>
+						<aside class="notes">
+							The same was also true in reverse: object to array conversion
+							could result in array keys that were numeric strings, which you
+							then couldn't access. (This tended to happen a lot when dealing
+							with JSON and SOAP.)
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>object</code> ↔ <code>array</code></h2>
+						<pre><code class="php" data-trim>
+$obj = new stdClass;
+$obj->{'0'} = 'foo';
+$arr = (array) $obj;
+var_dump($arr);
+var_dump($arr[0]);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+array(1) {
+  [0]=>
+  string(3) "foo"
+}
+string(3) "foo"
+						</code></pre>
+						<aside class="notes">
+							This is also fixed in PHP 7.2: the numeric string is converted to
+							a true number key.
+						</aside>
+					</section>
+
+					<section>
+						<pre><code class="php" data-trim>
+class C {
+  function f() {
+    printf("i am %s\n", get_class());
+    printf("stdClass is %s\n", get_class(new stdClass));
+    printf("null is %s\n", get_class(null));
+  }
+}
+(new C)->f();
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+i am C
+stdClass is stdClass
+null is C
+						</code></pre>
+						<aside class="notes">
+							Another change is to get_class(). It can be invoked in three ways.
+							That NULL behaviour is nasty: if you have a variable you think is
+							an object and it's actually NULL, you get garbage if get_class()
+							is invoked within another object method.
+						</aside>
+					</section>
+
+					<section>
+						<pre><code class="php" data-trim>
+class C {
+  function f() {
+    printf("i am %s\n", get_class());
+    printf("null is %s\n", get_class(null));
+  }
+}
+(new C)->f();
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+i am C
+
+Warning: get_class() expects parameter 1 to be object, null
+given in /tmp/test.php on line 11
+null is 
+						</code></pre>
+						<aside class="notes">
+							In PHP 7.2, you won't get garbage any more. The implicit behaviour
+							still works, but you have to not pass a parameter at all, rather
+							than passing NULL.
+						</aside>
+					</section>
+
+					<section>
+						<h2>Argon2i</h2>
+						<pre><code class="php" data-trim>
+echo password_hash($password, PASSWORD_ARGON2I);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+$argon2i$v=19$m=65536,t=2,p=4$c29tZXNhbHQ$RdescudvJCsgt3ub+b
++dWRWJTmaaJObG
+						</code></pre>
+						<aside class="notes">
+							An interesting addition is the first password hashing algorithm
+							other than bcrypt that the password hashing API supports. Argon2
+							won the Password Hashing Competition in 2015, and the password
+							derivation form will be optionally supported in PHP 7.2 if
+							libargon2 is available. (Discuss the default discussion that
+							ultimately didn't succeed for 7.4 and the compile time
+							dependency.)
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>What's deprecated in PHP 7.2</h2>
+						<aside class="notes">
+							Now let's talk about some deprecations that will be occurring in
+							PHP 7.2. These will <em>not</em> be removed until PHP 8 in the
+							future, but we're starting to think about what's going to come
+							out. Again, these aren't all of them, but these are the big ones
+							if you have an older codebase.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>create_function()</code></h2>
+						<p>Use anonymous functions instead</p>
+						<p>(or <code>eval()</code>, but I didn't say that)</p>
+						<aside class="notes">
+							create_function() is an old wart that wrapped eval() to create
+							something that sort of looked like a closure if you turned your
+							head and squinted really hard. It was obsolete the moment PHP 5.3
+							landed, and is usually a sign that something's gone wrong.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>assert()</code></h2>
+						<pre><code class="php" data-trim>
+// PHP 3-5
+assert("\$foo == \$bar");
+
+// PHP 7
+assert($foo == $bar);
+						</code></pre>
+						<aside class="notes">
+							Don't panic: we're not getting rid of assert(). In PHP 5, it was
+							effectively a wrapper for eval(). In PHP 7, you can just provide
+							code to assert(), and the eval() form that takes a string is going
+							to be deprecated.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>__autoload()</code></h2>
+						<p>Use <code>spl_autoload_register()</code></p>
+						<aside class="notes">
+							The first one is the original, PHP 5.0 era __autoload() function.
+							Since it's a singleton, libraries couldn't add their own
+							__autoload() implementations, and that sucked. In PHP 5.1 we added
+							spl_autoload_register(), and almost everyone uses it (that's what
+							you use with Composer), but we need to get rid of the wart, since
+							they don't play nicely together.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>each()</code></h2>
+						<pre><code class="php" data-trim>
+// PHP 3
+for (reset($arr); list($key, $val) = each($arr); ) {
+  // ...
+}
+
+// PHP 4 onwards
+foreach ($arr as $key => $val) {
+  // ...
+}
+						</code></pre>
+						<aside class="notes">
+							Here's a good one: in PHP 3, there were functions called reset(),
+							each(), and the like that you used to traverse an array. In PHP 4,
+							the foreach loop was added, and everyone forgot about those
+							functions. Well, we're going to kill each(): it's getting in the
+							way of language features, and it's inferior in every possible way
+							to foreach.
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>What's approved, but not (yet) in PHP 7.2</h2>
+						<aside class="notes">
+							OK, that's all well and good, Adam, but you want to see more
+							interesting stuff than this, right? Here are some of the language
+							changes that have been approved, but haven't yet landed in Git.
+							Most of these will likely be in PHP 7.2, but until the code
+							actually lands, there are no guarantees.
+						</aside>
+					</section>
+
+					<section>
+						<img src="images/libsodium.png" alt="libsodium">
+						<aside class="notes">
+							libsodium is a fork of NaCl (salt), which is a modern cryptography
+							library. Right now in PHP, your choices for encrypting data are
+							mcrypt (abandoned for about a decade, deprecated) or OpenSSL
+							(which has the worst API of probably any extension in PHP, mostly
+							because the C library has an awful API). libsodium provides modern
+							cryptography with an API that is easier to use, but more
+							importantly, harder to misuse. It'll land in PHP 7.2 just as soon
+							as we figure out what's happening with the namespacing of the API.
+						</aside>
+					</section>
+
+					<section>
+						<h2><code>??=</code></h2>
+						<pre><code class="php" data-trim>
+$foo = $foo ? $foo : 'default value';
+$foo = $foo ?? 'default value';
+$foo ??= 'default_value';
+						</code></pre>
+						<aside class="notes">
+							This is my favourite kind of syntactic sugar: something that
+							should have just been part of a feature to begin with. The
+							(awesome) null coalesce operator is getting a shorthand version.
+						</aside>
+					</section>
+
+					<section>
+						<pre><code class="php" data-trim>
+$a = 42;
+var_dump($a[0][1][2]);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+NULL
+						</code></pre>
+						<aside class="notes">
+							Here's another safety one. If you try to deference a variable that
+							doesn't support array dereferencing, right now you get NULL.
+							Silently.
+						</aside>
+					</section>
+
+					<section>
+						<pre><code class="php" data-trim>
+$a = 42;
+var_dump($a[0][1][2]);
+						</code></pre>
+						<pre><code class="nohighlight hljs" data-trim>
+Warning: Variable of type integer does not accept array
+offsets
+NULL
+						</code></pre>
+						<aside class="notes">
+							Once this lands, you will get a warning when this occurs. One nice
+							thing is that you only get one warning, no matter how many
+							dereferences there are. This is a lot like the invalid array to
+							string conversion warning that landed in PHP 7.1: it's a small
+							win, but it just makes it easier to write PHP.
+						</aside>
+					</section>
+
+					<section>
+						<pre><code class="php" data-trim>
+class Parent {
+  function doStuff(SomeObject $a) { /* ... */ }
+}
+
+class Child extends Parent {
+  function doStuff($a) { /* ... */ }
+}
+						</code></pre>
+						<aside class="notes">
+							Here's another change: in PHP 7.1, you can't remove a type
+							declaration in a subclass. This makes it hard for library authors
+							to implement type declarations (now we have scalars, in
+							particular), because code that inherits from the library classes
+							has to be upgraded all at once. In a future version, this will
+							work: it's valid in terms of contravariance, so there's no break
+							to PHP's object or type model.
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Topics of discussion</h2>
+						<aside class="notes">
+							OK, so that's all stuff that I'm pretty sure you'll be getting in
+							PHP 7.2. (Or, at worst, PHP 7.3.) Here's some stuff I don't think
+							you'll be getting in PHP 7.2, but which is under serious
+							discussion right now. None of this will probably happen in the
+							exact form I'm going to show you, but just to give a taste of
+							what's being talked about on Internals...
+						</aside>
+					</section>
+
+					<section>
+						<h2>Arrow functions</h2>
+						<pre><code class="php" data-trim>
+// Old
+function array_values_from_keys(array $arr, array $keys): array {
+  return array_map(function ($key) use ($arr) {
+    return $arr[$key];
+  }, $keys);
+}
+
+// New?
+function array_values_from_keys(array $arr, array $keys): array {
+  return array_map(fn($key) => $arr[$key], $keys);
+}
+						</code></pre>
+						<aside class="notes">
+							If I was going to bet on a bolter making it into PHP 7.2, it's
+							probably this one. A lot of languages have some concept of a
+							shorthand closure: ECMAScript has arrow functions that look a lot
+							like this, Python has lambdas, Ruby has lambda literals. The idea
+							here is for a single statement closure that implicitly captures
+							variables. The main impediments right now are syntax (fn? |$key|?
+							hit next) and the implicit capture.
+						</aside>
+					</section>
+
+					<section>
+						<h2>Arrow functions</h2>
+						<pre><code class="php" data-trim>
+// Old
+function array_values_from_keys(array $arr, array $keys): array {
+  return array_map(function ($key) use ($arr) {
+    return $arr[$key];
+  }, $keys);
+}
+
+// New?
+function array_values_from_keys(array $arr, array $keys): array {
+  return array_map(|$key| => $arr[$key], $keys);
+}
+						</code></pre>
+						<aside class="notes">
+							If I was going to bet on a bolter making it into PHP 7.2, it's
+							probably this one. A lot of languages have some concept of a
+							shorthand closure: ECMAScript has arrow functions that look a lot
+							like this, Python has lambdas, Ruby has lambda literals. The idea
+							here is for a single statement closure that implicitly captures
+							variables. The main impediments right now are syntax (fn? |$key|?
+							hit next) and the implicit capture.
+						</aside>
+					</section>
+
+					<section>
+						<h2>Pipe operator</h2>
+						<pre><code class="php" data-trim>
+$r = array_merge(
+       $ret,
+       getFileArg(
+         array_map(
+           function ($x) use ($arg) { return $arg . '/' . $x; },
+           array_filter(
+             scandir($arg),
+             function ($x) { return $x !== '.' && $x !== '..'); }
+           )
+         )
+       )
+     );
+						</code></pre>
+						<aside class="notes">
+							Another thing on the table is a pipe operator, where the return
+							value of one function can be chained into another function without
+							necessarily using a fluent interface. To read this, you have to
+							start at the most nested function (scandir()) and work out: it
+							gets filtered, then mapped, then this getFileArg() function is
+							called, and finally it's all merged.
+						</aside>
+					</section>
+
+					<section>
+						<h2>Pipe operator</h2>
+						<pre><code class="php" data-trim>
+$r = scandir($arg)
+       |> array_filter($$, function($x) { return $x !== '.'
+                                              && $x != '..'; })
+       |> array_map(function ($x) use ($arg) { return "$arg/$x"; },
+                    $$)
+       |> getFileArg($$)
+       |> array_merge($ret, $$);
+						</code></pre>
+						<aside class="notes">
+							The idea here is that you can chain calls together: instead, the
+							first thing you see is the first call, and then the return value
+							of that function is piped into the next call using $$. I
+							personally have deeply mixed feelings on this one: this example
+							shows it off well, but it's also possible to really hide how
+							variables are getting passed around from function to function.
+							It's an interesting idea, though, and apparently Facebook found it
+							useful in Hack.
+						</aside>
+					</section>
+
+					<section>
+						<img src="images/shattered.png">
+						<aside class="notes">
+							For those of you who've seen the news today, a research team at
+							Google announced a collision in SHA-1. Most browsers either have
+							or are in the process of deprecating SSL certificates that use
+							SHA-1, and it's likely that PHP will follow suit in the not too
+							distant future.
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Blatant, wild guesswork</h2>
+						<aside class="notes">
+							Finally, the far distant future.
+						</aside>
+					</section>
+
+					<section>
+						<p>Generics?</p>
+						<p>Object properties?</p>
+						<p>Annotations?</p>
+						<p>Enums?</p>
+						<p><code>async</code>/<code>await</code></p>
+						<p>JIT?</p>
+						<aside class="notes">
+							These are all features that have undergone some level of
+							development, but are some distance from being voteable RFCs. I
+							don't expect to see any of these in PHP 7.2 or 7.3, but some of
+							these are quite likely for 8.0. Some will probably never happen.
+						</aside>
+					</section>
+
+					<section>
+						<p>Your idea here?</p>
+						<aside class="notes">
+							If you like language design, C, and arguing with people, you too
+							can get involved. Language features for PHP can start with nothing
+							more than a wiki page, an e-mail to internals, and maybe a PR. I
+							won't pretend it's an easy crowd, but we are open to features,
+							especially when they don't break BC and come with some sort of
+							proof of concept.
+						</aside>
+					</section>
+				</section>
+
+				<section>
+					<h1>Thank you</h1>
 					<h2>Questions?</h2>
+					<h3><a href="https://twitter.com/lgnome">@LGnome</a></h3>
 					<aside class="notes">
 					</aside>
 				</section>
 			</div>
 		</div>
-
 	</body>
 </html>
 <!-- vim: set nocin ai noet ts=2 sw=2: -->

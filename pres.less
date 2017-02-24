@@ -3,12 +3,24 @@
 /* Generic styling. */
 .reveal {
   font-family: Lato, sans-serif;
-  font-size: 5vh;
+  font-size: 8vh;
 
   h1, h2, h3, h4, h5, h6 {
     font-family: Lato, sans-serif;
     letter-spacing: 0;
     text-transform: none;
+  }
+
+  h1 {
+    font-size: 18vh;
+  }
+
+  h2 {
+    font-size: 12vh;
+  }
+
+  h3 {
+    font-size: 10vh;
   }
 
   code {
@@ -99,6 +111,163 @@
   }
 
   /* Slide specific styles. */
+
+  .slides section:first-child section:first-child {
+    /* Crystal ball, shamelessly nicked from https://cssanimation.rocks/spheres/ */
+    .php {
+      display: inline-block;
+      width: 50%;
+      height: 50%;
+      left: 25%;
+      top: 25%;
+      position: absolute;
+      background-image: url(images/php-logo.svg);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      animation: crystal-ball infinite 300s;
+
+      @keyframes crystal-ball {
+        0% {
+          width: 50%;
+          height: 50%;
+          left: 25%;
+          top: 25%;
+        }
+
+        10% {
+          width: 60%;
+          height: 50%;
+          left: 25%;
+          top: 15%;
+          transform: scale(1.4, 1.0);
+        }
+
+        20% {
+          width: 50%;
+          height: 50%;
+          left: 15%;
+          top: 15%;
+          transform: rotateY(20deg);
+        }
+
+        40% {
+          width: 50%;
+          height: 50%;
+          left: 15%;
+          top: 25%;
+          transform: rotateY(-10deg) rotateX(5deg);
+        }
+
+        45% {
+          width: 40%;
+          height: 50%;
+          left: 35%;
+          top: 30%;
+          transform: none;
+        }
+
+        60% {
+          width: 50%;
+          height: 50%;
+          left: 35%;
+          top: 25%;
+          transform: rotateY(-5deg) rotateZ(5deg);
+        }
+
+        80% {
+          width: 70%;
+          height: 70%;
+          left: 15%;
+          top: 15%;
+        }
+
+        100% {
+          width: 50%;
+          height: 50%;
+          left: 25%;
+          top: 25%;
+        }
+      }
+    }
+
+    .ball {
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      border-radius: 100%;
+      position: relative;
+      background: radial-gradient(circle at bottom, #81e8f6, #76deef 10%, #055194 80%, #062745 100%); }
+      .ball:before {
+        content: "";
+        position: absolute;
+        top: 1%;
+        left: 5%;
+        width: 90%;
+        height: 90%;
+        border-radius: 100%;
+        background: radial-gradient(circle at top, white, rgba(255, 255, 255, 0) 58%);
+        -webkit-filter: blur(5px);
+        filter: blur(5px);
+        z-index: 2; }
+      .ball:after {
+        content: "";
+        position: absolute;
+        display: none;
+        top: 5%;
+        left: 10%;
+        width: 80%;
+        height: 80%;
+        border-radius: 100%;
+        -webkit-filter: blur(1px);
+        filter: blur(1px);
+        z-index: 2;
+        -webkit-transform: rotateZ(-30deg);
+        transform: rotateZ(-30deg); }
+      .ball .shadow {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0) 50%);
+        -webkit-transform: rotateX(90deg) translateZ(-160px);
+        transform: rotateX(90deg) translateZ(-160px);
+        z-index: 1; }
+      .ball.plain {
+        background: black; }
+        .ball.plain:before, .ball.plain:after {
+          display: none; }
+      .ball.bubble {
+        background: radial-gradient(circle at 50% 55%, rgba(240, 245, 255, 0.9), rgba(240, 245, 255, 0.9) 40%, rgba(225, 238, 255, 0.8) 60%, rgba(43, 130, 255, 0.4));
+       }
+        .ball.bubble:before {
+          -webkit-filter: blur(0);
+          filter: blur(0);
+          height: 80%;
+          width: 40%;
+          background: radial-gradient(circle at 130% 130%, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0.8) 58%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0) 100%);
+          -webkit-transform: translateX(131%) translateY(58%) rotateZ(168deg) rotateX(10deg);
+          transform: translateX(131%) translateY(58%) rotateZ(168deg) rotateX(10deg); }
+        .ball.bubble:after {
+          display: block;
+          background: radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 74%, white 80%, white 84%, rgba(255, 255, 255, 0) 100%); }
+
+    .stage {
+      width: 60vh;
+      height: 60vh;
+      display: inline-block;
+      margin-bottom: 10vh;
+      -webkit-perspective: 1200px;
+      -moz-perspective: 1200px;
+      -ms-perspective: 1200px;
+      -o-perspective: 1200px;
+      perspective: 1200px;
+      -webkit-perspective-origin: 50% 50%;
+      -moz-perspective-origin: 50% 50%;
+      -ms-perspective-origin: 50% 50%;
+      -o-perspective-origin: 50% 50%;
+      perspective-origin: 50% 50%;
+    }
+  }
 }
 
 /* vim: set nocin ai et ts=2 sw=2: */
